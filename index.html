@@ -1,0 +1,232 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Streamly - Seu universo de histórias</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#edf3f4;color:#183344;font-family:Arial,sans-serif}
+header{background:#101b2a;color:white;padding:20px}
+header h1{margin:0;color:#68d9c8}
+header p{margin:5px 0;color:#b6cbd0;font-size:13px}
+nav{display:flex;gap:8px;margin-top:18px}
+button{cursor:pointer;border:0;border-radius:9px;padding:11px}
+nav button{flex:1;background:#263748;color:white}
+nav button.active,.primary{background:#168f86;color:white}
+main{max-width:850px;margin:auto;padding:22px}
+section{display:none}
+section.active{display:block}
+h2{color:#183344}
+.panel,.card{background:white;padding:17px;border-radius:14px;margin:15px 0}
+input{width:100%;padding:13px;border:1px solid #d5e0e3;border-radius:9px}
+label{display:block;font-weight:bold;font-size:13px;margin:12px 0 7px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.chip{background:#dce8e9;color:#294553}
+.chip.active{background:#168f86;color:white}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.movie{background:white;border-radius:13px;overflow:hidden}
+.poster{height:110px;background:#dce9eb;display:grid;place-items:center;font-size:43px}
+.info{padding:12px}
+.info strong{display:block}
+.small{font-size:12px;color:#71828b;margin-top:5px}
+.platform{font-size:12px;color:#168f86;font-weight:bold;margin-top:7px}
+.full{width:100%;margin-top:10px}
+.back{background:transparent;color:#168f86;padding-left:0}
+.hero{background:#dce9eb;border-radius:14px;text-align:center;padding:25px}
+.hero .emoji{font-size:55px}
+.hero h2{margin:8px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.stat{background:#edf5f4;padding:13px;border-radius:10px}
+.stat b{display:block;font-size:25px;color:#168f86}
+.watch{background:white;border-radius:12px;padding:14px;margin:10px 0}
+.progress{height:6px;background:#e4ecee;border-radius:8px;margin:12px 0 5px;overflow:hidden}
+.progress span{display:block;height:100%;background:#37b6a5}
+footer{background:#101b2a;color:#b6cbd0;text-align:center;padding:16px;font-size:12px}
+@media(max-width:500px){main{padding:15px}.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+
+<body>
+<header>
+<h1>✦ Streamly</h1>
+<p>Seu universo de histórias</p>
+<nav>
+<button class="active" onclick="show('home',this)">Buscar</button>
+<button onclick="show('details',this)">Detalhes</button>
+<button onclick="show('library',this)">Minha área</button>
+</nav>
+</header>
+
+<main>
+
+<section id="home" class="active">
+<h2>Qual história vamos descobrir hoje?</h2>
+<p>Encontre filmes e séries em todos os seus streamings.</p>
+
+<div class="panel">
+<label>Busque pelo nome</label>
+<input id="search" placeholder="Ex.: Interestelar, Stranger Things..." oninput="render()">
+
+<label>Ou escolha um gênero</label>
+<div class="chips" id="genres"></div>
+</div>
+
+<h2>Explore histórias</h2>
+<div class="grid" id="movies"></div>
+</section>
+
+<section id="details">
+<button class="back" onclick="show('home')">← Voltar à busca</button>
+<div id="detail">
+<p>Selecione um filme ou série na tela de busca para ver os detalhes.</p>
+</div>
+</section>
+
+<section id="library">
+<h2>Minha área</h2>
+<p>Acompanhe tudo o que você está assistindo em um só lugar.</p>
+
+<div class="panel">
+<h3>Seus streamings</h3>
+<div class="stats" id="stats"></div>
+</div>
+
+<h3>Continuar assistindo</h3>
+<div class="chips" id="filters"></div>
+<div id="watching"></div>
+
+<div class="panel">
+<h3>Minha lista</h3>
+<div id="saved">Você ainda não salvou nenhum título.</div>
+</div>
+</section>
+
+</main>
+
+<footer>✦ STREAMLY • Seu universo de histórias</footer>
+
+<script>
+const data=[
+{name:"Interestelar",genre:"Ficção científica",platform:"Prime Video",duration:"2h 49min",type:"Filme",emoji:"🌌",desc:"Uma jornada pelo espaço em busca de um novo lar para a humanidade."},
+{name:"Stranger Things",genre:"Suspense",platform:"Netflix",duration:"5 temporadas",type:"Série",emoji:"👾",desc:"Um grupo de amigos enfrenta acontecimentos sobrenaturais."},
+{name:"The Bear",genre:"Drama",platform:"Disney+",duration:"4 temporadas",type:"Série",emoji:"🍽️",desc:"A rotina intensa de um jovem chef em um restaurante."},
+{name:"A Culpa é das Estrelas",genre:"Romance",platform:"Disney+",duration:"2h 6min",type:"Filme",emoji:"✨",desc:"Uma história de amor, descobertas e superação."},
+{name:"The Last of Us",genre:"Ação",platform:"Max",duration:"2 temporadas",type:"Série",emoji:"🍄",desc:"Uma jornada de sobrevivência em um mundo pós-apocalíptico."},
+{name:"Enola Holmes",genre:"Aventura",platform:"Netflix",duration:"2h 3min",type:"Filme",emoji:"🔎",desc:"Uma jovem investigadora embarca em uma aventura."}
+];
+
+const watching=[
+{name:"Stranger Things",platform:"Netflix",progress:72,episode:"T4 • Episódio 5",emoji:"👾"},
+{name:"The Bear",platform:"Disney+",progress:35,episode:"T2 • Episódio 3",emoji:"🍽️"},
+{name:"The Last of Us",platform:"Max",progress:85,episode:"T2 • Episódio 6",emoji:"🍄"},
+{name:"Interestelar",platform:"Prime Video",progress:50,episode:"Continuar filme",emoji:"🌌"}
+];
+
+const platforms=["Netflix","Prime Video","Disney+","Max"];
+const genres=["Todos","Ação","Romance","Suspense","Drama","Ficção científica","Aventura"];
+let genre="Todos",filter="Todos",selected=null,saved=[];
+
+function show(id,button){
+ if(id==="details"&&!selected){
+  document.getElementById("detail").innerHTML="<p>Selecione um filme ou série na tela de busca para ver os detalhes.</p>";
+ }
+ document.querySelectorAll("main section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
+ if(id==="library")renderLibrary();
+ window.scrollTo(0,0);
+}
+
+function renderGenres(){
+ document.getElementById("genres").innerHTML=genres.map(g=>
+ `<button class="chip ${genre===g?"active":""}" onclick="setGenre('${g}')">${g}</button>`
+ ).join("");
+}
+
+function setGenre(g){genre=g;renderGenres();render();}
+
+function render(){
+ const q=document.getElementById("search").value.toLowerCase();
+ const list=data.filter(m=>(genre==="Todos"||m.genre===genre)&&m.name.toLowerCase().includes(q));
+ document.getElementById("movies").innerHTML=list.map(m=>`
+ <div class="movie">
+ <div class="poster">${m.emoji}</div>
+ <div class="info">
+ <strong>${m.name}</strong>
+ <div class="small">${m.genre}</div>
+ <div class="platform">${m.platform}</div>
+ <button class="primary full" onclick="openMovie('${m.name}')">Ver detalhes</button>
+ </div></div>`).join("") || "<p>Nenhum título encontrado.</p>";
+}
+
+function openMovie(name){
+ selected=data.find(m=>m.name===name);
+ if(!selected)return;
+ document.getElementById("detail").innerHTML=`
+ <div class="hero">
+ <div class="emoji">${selected.emoji}</div>
+ <h2>${selected.name}</h2>
+ <p>${selected.genre} • ${selected.type}</p>
+ </div>
+ <div class="card">
+ <h3>Sobre o conteúdo</h3>
+ <p>${selected.desc}</p>
+ </div>
+ <div class="card">
+ <h3>Onde assistir?</h3>
+ <div class="row"><strong>${selected.platform}</strong><span style="color:#168f86">Disponível*</span></div>
+ <hr>
+ <h3>Duração / quantidade</h3>
+ <strong>${selected.duration}</strong>
+ <p class="small">${selected.type==="Série"?"Consulte a disponibilidade das temporadas na plataforma.":"Duração total do filme."}</p>
+ </div>
+ <button class="primary full" onclick="toggleSave()">${saved.includes(name)?"✓ Salvo na minha lista":"＋ Adicionar à minha lista"}</button>
+ <p class="small">*Disponibilidade ilustrativa neste protótipo.</p>
+ `;
+ show("details");
+}
+
+function toggleSave(){
+ if(saved.includes(selected.name))saved=saved.filter(n=>n!==selected.name);
+ else saved.push(selected.name);
+ openMovie(selected.name);
+}
+
+function renderLibrary(){
+ document.getElementById("stats").innerHTML=platforms.map(p=>`
+ <div class="stat"><b>${watching.filter(w=>w.platform===p).length}</b>${p}<div class="small">conteúdo(s)</div></div>
+ `).join("");
+
+ document.getElementById("filters").innerHTML=["Todos",...platforms].map(p=>
+ `<button class="chip ${filter===p?"active":""}" onclick="setFilter('${p}')">${p}</button>`
+ ).join("");
+
+ const list=watching.filter(w=>filter==="Todos"||w.platform===filter);
+ document.getElementById("watching").innerHTML=list.map(w=>`
+ <div class="watch">
+ <div class="row"><strong>${w.emoji} ${w.name}</strong><span class="small">${w.platform}</span></div>
+ <div class="small">${w.episode}</div>
+ <div class="progress"><span style="width:${w.progress}%"></span></div>
+ <div class="small">${w.progress}% assistido</div>
+ </div>
+ `).join("") || "<p>Nenhum conteúdo nessa plataforma.</p>";
+
+ document.getElementById("saved").innerHTML=saved.length?saved.map(n=>`
+ <div class="row" style="margin:10px 0"><span>${n}</span><button class="chip" onclick="removeSave('${n}')">Remover</button></div>
+ `).join(""):"Você ainda não salvou nenhum título.";
+}
+
+function setFilter(p){filter=p;renderLibrary();}
+function removeSave(n){saved=saved.filter(x=>x!==n);renderLibrary();}
+
+renderGenres();
+render();
+renderLibrary();
+</script>
+</body>
+</html>
